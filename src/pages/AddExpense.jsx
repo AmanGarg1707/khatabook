@@ -118,13 +118,13 @@ export default function AddExpense() {
             <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
               Quick Suggestions
             </p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex gap-2 overflow-x-auto pb-1">
               {rankedSuggestions.map(suggestion => (
                 <button
                   key={suggestion}
                   type="button"
                   onClick={() => applyNameSuggestion(suggestion)}
-                  className={`rounded-full border px-3 py-1 text-[11px] font-medium transition-colors ${
+                  className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1 text-[11px] font-medium transition-colors ${
                     name.toLowerCase() === suggestion.toLowerCase()
                       ? 'border-indigo-200 bg-indigo-50 text-indigo-600'
                       : 'border-gray-200 bg-white text-gray-500 hover:border-indigo-200 hover:text-indigo-600'
