@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script>
+    var path = window.location.pathname.replace('/khatabook', '') || '/';
+    sessionStorage.redirect = path;
+    window.location.replace('/khatabook/');
+  </script>
+</head>
+</html>

@@ -1,0 +1,10 @@
+i have app script setup over the google sheet to manage my expenses
+i want REACT PWA app which i will host on the github pages to help me share this app with my family easily
+in the app i want following things:
+1. add expense page - defacto first page on launch (on other pages there will be a bottom + icon floating), from here i will be able to add the expenses easily using the fields required by the add expense api (date, name, amount, and tags (mult input with default tag as general))
+2. this will be view page where i will be able to view the expenses stored in the sheet. here top level filter is always the current financial year (and previous 3 in drop down - if there i a way to get this by using app script as each financial year has its own sheet that would be better) and alonside it i will show the total of that financial year. below it will be filters (no need for multi select filters) default filter is by current month and other months in the fiscal year till now , along with tags filter (better if we can get unique tags data from the sheet as well) all these filters will be shown in chips. Below it will be the filterd list of expense on top which will be the total of filitered expenses with a small loader icon beside it to refersh. Enry point for this will an icon in the bottom right while user is on the add expense page.
+3. a setting page where i can configure the script url (a top right icon will suffice for it)
+
+Now when i add an expense using the add screen , as google script can be slow, i want it to perform it async somthing like this so that user can add multiple expense and syncing can happend in backgroud.
+when i sumbit request, a temporary list of expenses to be synced will be shown below the add expense form with icon denoting syncing in progress.
+now if it success it will quitly remove itself from the list, but if it fails option to retry it should be there so that user can tap it and process it
