@@ -16,6 +16,14 @@ export function addExpense({ date, name, amount, tags }) {
   return apiFetch({ action: 'add', date, name, amount, tags })
 }
 
+export function editExpense({ id, date, name, amount, tags }) {
+  return apiFetch({ action: 'edit', id, date, name, amount, tags })
+}
+
+export function deleteExpense(id) {
+  return apiFetch({ action: 'delete', id })
+}
+
 export function listExpenses({ filter, value, fyName }) {
   return apiFetch({ action: 'list', filter, value, fyName })
 }

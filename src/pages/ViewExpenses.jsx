@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { listExpenses } from '../lib/api'
-import { getCachedTags } from '../lib/metadataCache'
+import { deleteExpense, editExpense, listExpenses } from '../lib/api'
+import { getCachedTags, refreshTagsForFY } from '../lib/metadataCache'
 import { currentFYName, fyMonthChips, getTagsCache } from '../lib/storage'
 import BottomNav from '../components/BottomNav'
 import FYSelector from '../components/FYSelector'
@@ -18,6 +18,8 @@ export default function ViewExpenses() {
   const [expenses, setExpenses] = useState([])
   const [filteredTotal, setFilteredTotal] = useState(0)
   const [loading, setLoading] = useState(false)
+  const [busyExpenseId, setBusyExpenseId] = useState(null)
+  const [deleteCandidateId, setDeleteCandidateId] = useState(null)
   const [error, setError] = useState(null)
 
   const monthChips = fyMonthChips(fy)
@@ -81,6 +83,59 @@ export default function ViewExpenses() {
     await handleChipSelect(activeChip)
   }
 
+  async function reloadAfterMutation(nextActiveChip = activeChip) {
+    const tags = await refreshTagsForFY(fy)
+    setTagChips(tags.map(t => ({ label: t, value: t, filter: 'tag' })))
+
+    let chipToLoad = nextActiveChip
+    if (nextActiveChip?.filter === 'tag') {
+      const exists = tags.some(tag => tag.toLowerCase() === nextActiveChip.value.toLowerCase())
+      if (!exists) {
+        chipToLoad = fyMonthChips(fy)[0] ?? null
+        setActiveChip(chipToLoad)
+      }
+    }
+
+    if (!chipToLoad) return
+    const data = await listExpenses({ filter: chipToLoad.filter, value: chipToLoad.value, fyName: fy })
+    setExpenses(data.expenses)
+    setFilteredTotal(data.filteredTotal)
+    setYearTotal(data.yearTotal)
+  }
+
+  async function handleEditExpense(updatedExpense) {
+    setError(null)
+    setBusyExpenseId(updatedExpense.id)
+    try {
+      await editExpense(updatedExpense)
+      await reloadAfterMutation()
+    } catch (e) {
+      setError(e.message)
+      throw e
+    } finally {
+      setBusyExpenseId(null)
+    }
+  }
+
+  function handleDeleteExpense(expenseId) {
+    setDeleteCandidateId(expenseId)
+  }
+
+  async function confirmDeleteExpense() {
+    if (!deleteCandidateId) return
+    setError(null)
+    setBusyExpenseId(deleteCandidateId)
+    try {
+      await deleteExpense(deleteCandidateId)
+      await reloadAfterMutation()
+      setDeleteCandidateId(null)
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setBusyExpenseId(null)
+    }
+  }
+
   return (
     <div className="flex h-screen flex-col bg-white pb-16 overflow-hidden">
       {/* Header */}
@@ -139,8 +194,43 @@ export default function ViewExpenses() {
           expenses={expenses}
           loading={loading}
           error={error}
+          onEdit={handleEditExpense}
+          onDelete={handleDeleteExpense}
+          busyExpenseId={busyExpenseId}
         />
       </div>
+
+      {deleteCandidateId && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 pb-20 sm:items-center sm:pb-4">
+          <div className="w-full max-w-sm rounded-2xl border border-red-100 bg-white p-4 shadow-2xl">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-red-400">
+              Confirm Delete
+            </p>
+            <h3 className="mt-1 text-base font-bold text-gray-800">Delete this expense?</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              This action cannot be undone.
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDeleteCandidateId(null)}
+                disabled={busyExpenseId === deleteCandidateId}
+                className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteExpense}
+                disabled={busyExpenseId === deleteCandidateId}
+                className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-60"
+              >
+                {busyExpenseId === deleteCandidateId ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <BottomNav />
     </div>
