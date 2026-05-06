@@ -119,7 +119,7 @@ function listExpenses(ss, body) {
       if (!data[i][0]) continue;
       var expense = rowToExpense(data[i]);
       if (filter === 'month' && !expense.date.startsWith(value)) continue;
-      if (filter === 'tag' && expense.tags.indexOf(value) === -1) continue;
+      if (filter === 'tag' && !expense.tags.some(function(t) { return t.toLowerCase() === value.toLowerCase(); })) continue;
       expenses.push(expense);
     }
   }
@@ -151,13 +151,16 @@ function listTags(ss, body) {
   var sheet = ss.getSheetByName(body.fyName);
   if (!sheet) return jsonResponse({ tags: [] });
   var data = sheet.getDataRange().getValues();
-  var tagSet = {};
+  var tagMap = {}; // lowercase key → first-seen original casing
   for (var i = 1; i < data.length; i++) {
     if (!data[i][0]) continue;
     String(data[i][4]).split(',').forEach(function(t) {
       var trimmed = t.trim();
-      if (trimmed) tagSet[trimmed] = true;
+      if (!trimmed) return;
+      var key = trimmed.toLowerCase();
+      if (!tagMap[key]) tagMap[key] = trimmed;
     });
   }
-  return jsonResponse({ tags: Object.keys(tagSet).sort() });
+  var tags = Object.keys(tagMap).sort().map(function(k) { return tagMap[k]; });
+  return jsonResponse({ tags: tags });
 }
