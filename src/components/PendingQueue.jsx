@@ -5,11 +5,11 @@ export default function PendingQueue() {
   if (queue.length === 0) return null
 
   return (
-    <div className="mx-4 mb-4 flex h-full flex-col rounded-xl border border-gray-200 bg-gray-50 p-3">
-      <p className="mb-2 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+    <div className="mx-4 mb-4 rounded-xl border border-gray-200 bg-gray-50 p-3">
+      <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
         Pending Sync
       </p>
-      <ul className="flex-1 space-y-2 overflow-y-auto">
+      <ul className="space-y-2">
         {queue.map(item => (
           <li
             key={item.localId}

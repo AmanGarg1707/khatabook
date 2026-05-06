@@ -1,8 +1,25 @@
 const SCRIPT_URL_KEY = 'scriptUrl'
 const QUEUE_KEY = 'syncQueue'
+const NAME_SUGGESTIONS_KEY = 'nameSuggestions'
 const SHEETS_CACHE_KEY = 'cache_sheets'
 const TAGS_CACHE_PREFIX = 'cache_tags_'
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000 // 24 hours
+
+export const DEFAULT_NAME_SUGGESTIONS = [
+  'Milk',
+  'Shopping',
+  'Fruits-Vegetables',
+  'Canteen',
+  'Petrol',
+  'Medicine',
+  'Bill',
+  'Mobile',
+  'Gas',
+  'Snacks',
+  'Breakfast',
+  'Lunch',
+  'Dinner',
+]
 
 export function getScriptUrl() {
   return localStorage.getItem(SCRIPT_URL_KEY) || ''
@@ -22,6 +39,38 @@ export function loadQueue() {
 
 export function saveQueue(queue) {
   localStorage.setItem(QUEUE_KEY, JSON.stringify(queue))
+}
+
+function normalizeSuggestions(suggestions) {
+  const unique = []
+  suggestions.forEach(item => {
+    const value = String(item || '').trim()
+    if (!value) return
+    if (!unique.some(existing => existing.toLowerCase() === value.toLowerCase())) {
+      unique.push(value)
+    }
+  })
+  return unique
+}
+
+export function getNameSuggestions() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(NAME_SUGGESTIONS_KEY))
+    if (!Array.isArray(parsed)) return DEFAULT_NAME_SUGGESTIONS
+    const normalized = normalizeSuggestions(parsed)
+    return normalized.length > 0 ? normalized : DEFAULT_NAME_SUGGESTIONS
+  } catch {
+    return DEFAULT_NAME_SUGGESTIONS
+  }
+}
+
+export function setNameSuggestions(suggestions) {
+  const normalized = normalizeSuggestions(suggestions)
+  if (normalized.length === 0) {
+    localStorage.removeItem(NAME_SUGGESTIONS_KEY)
+    return
+  }
+  localStorage.setItem(NAME_SUGGESTIONS_KEY, JSON.stringify(normalized))
 }
 
 // Cache helpers — each cache entry: { data, cachedAt }

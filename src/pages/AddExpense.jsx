@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useSyncQueue } from '../context/SyncQueueContext'
 import BottomNav from '../components/BottomNav'
 import PendingQueue from '../components/PendingQueue'
+import { getNameSuggestions } from '../lib/storage'
 
 function todayISO() {
   return new Date().toLocaleDateString('en-CA') // yyyy-MM-dd in local time
@@ -9,11 +10,30 @@ function todayISO() {
 
 export default function AddExpense() {
   const { enqueue } = useSyncQueue()
+  const [nameSuggestions] = useState(getNameSuggestions)
   const [date, setDate] = useState(todayISO)
   const [name, setName] = useState('')
   const [amount, setAmount] = useState('')
   const [tags, setTags] = useState(['general'])
   const [tagInput, setTagInput] = useState('')
+  const nameQuery = name.trim().toLowerCase()
+  const rankedSuggestions = [...nameSuggestions]
+    .sort((a, b) => {
+      if (!nameQuery) return 0
+
+      const aValue = a.toLowerCase()
+      const bValue = b.toLowerCase()
+      const aStarts = aValue.startsWith(nameQuery)
+      const bStarts = bValue.startsWith(nameQuery)
+      if (aStarts !== bStarts) return aStarts ? -1 : 1
+
+      const aIncludes = aValue.includes(nameQuery)
+      const bIncludes = bValue.includes(nameQuery)
+      if (aIncludes !== bIncludes) return aIncludes ? -1 : 1
+
+      return a.localeCompare(b)
+    })
+    .slice(0, 10)
 
   function addTag() {
     const t = tagInput.trim().toLowerCase()
@@ -42,10 +62,14 @@ export default function AddExpense() {
     setTagInput('')
   }
 
+  function applyNameSuggestion(suggestion) {
+    setName(suggestion)
+  }
+
   return (
-    <div className="flex h-screen flex-col bg-white pb-16 overflow-hidden">
+    <div className="flex h-screen flex-col bg-white pb-16">
       {/* Header */}
-      <div className="gradient-brand px-4 pb-5 pt-10">
+      <div className="gradient-brand shrink-0 px-4 pb-5 pt-10">
         <div className="flex items-center gap-1.5">
           <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" className="h-4 w-4 rounded-sm" />
           <p className="text-[10px] font-semibold uppercase tracking-widest text-indigo-200">
@@ -55,6 +79,8 @@ export default function AddExpense() {
         <h1 className="mt-1 text-2xl font-bold text-white">Add Expense</h1>
       </div>
 
+      {/* Scrollable body */}
+      <div className="flex-1 overflow-y-auto">
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4 p-4">
         <div>
@@ -88,6 +114,27 @@ export default function AddExpense() {
             required
             className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
+          <div className="mt-2 rounded-lg border border-gray-100 bg-gray-50/80 p-2">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+              Quick Suggestions
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {rankedSuggestions.map(suggestion => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  onClick={() => applyNameSuggestion(suggestion)}
+                  className={`rounded-full border px-3 py-1 text-[11px] font-medium transition-colors ${
+                    name.toLowerCase() === suggestion.toLowerCase()
+                      ? 'border-indigo-200 bg-indigo-50 text-indigo-600'
+                      : 'border-gray-200 bg-white text-gray-500 hover:border-indigo-200 hover:text-indigo-600'
+                  }`}
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div>
@@ -152,8 +199,7 @@ export default function AddExpense() {
         </button>
       </form>
 
-      <div className="flex-1 overflow-hidden">
-        <PendingQueue />
+      <PendingQueue />
       </div>
       <BottomNav />
     </div>

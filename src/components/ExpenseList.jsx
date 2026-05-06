@@ -53,7 +53,7 @@ export default function ExpenseList({ expenses, loading, error }) {
           </ul>
         : groups.map(group => (
             <div key={group.date}>
-              <div className="sticky top-0 z-10 flex items-center gap-2 py-2">
+              <div className="sticky top-0 z-10 flex items-center gap-2 bg-white py-2">
                 <div className="h-px flex-1 bg-gray-100" />
                 <span className="rounded-full bg-gray-100 px-3 py-0.5 text-[10px] font-medium text-gray-400">
                   {formatDateHeader(group.date)}
